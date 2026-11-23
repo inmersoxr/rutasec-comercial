@@ -2,8 +2,9 @@ import '@fontsource/barlow-condensed/latin-800.css';
 import '@fontsource-variable/dm-sans/wght.css';
 import './styles.css';
 import { render } from './sections.js';
-import { configureMotion } from './motion.js';
-import { configureApplication, configureNavigation, configurePassenger, configurePremium, configureSimulator } from './interactions.js';
+import { configureMotion, configureDestinations } from './motion.js';
+import { configurePremium } from './premium.js';
+import { configureApplication, configureNavigation, configurePassenger, configureSimulator } from './interactions.js';
 
 document.querySelector('#app').innerHTML = render();
 configureNavigation();
@@ -12,6 +13,7 @@ configurePremium();
 configureSimulator();
 configureApplication();
 configureMotion();
+configureDestinations();
 
 const mapAreas = document.querySelectorAll('.map-surface');
 const mapsObserver = new IntersectionObserver(entries => {

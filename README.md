@@ -1,6 +1,6 @@
 # RutasEC — Conecta Ecuador
 
-Presentación comercial independiente de la PWA. La landing contiene tres actos y once secciones, un simulador de ventas, demostraciones de Premium y seguimiento, y un formulario de incorporación de operadoras.
+Presentación comercial independiente de la PWA. La landing contiene tres actos y once secciones, un simulador de ventas, un acto Premium de diez capítulos, demostraciones de seguimiento, y un formulario de incorporación de operadoras.
 
 ## Desarrollo
 
@@ -21,6 +21,6 @@ En el repositorio de la landing, seleccionar **Settings → Pages → Build and 
 
 `src/content.js` reúne las secuencias, textos, planes y configuración de contacto. Correo y WhatsApp también pueden publicarse desde la configuración institucional de RutasEC. El formulario utiliza el servicio institucional de solicitudes, que guarda los datos para revisión administrativa y devuelve una referencia.
 
-Los mapas y las interfaces Premium muestran datos simulados. La secuencia de seguimiento puede compartirse mediante un enlace que conserva el avance o la fecha de inicio de la simulación.
+Los mapas y las interfaces Premium muestran datos simulados. Las fichas de vehículos, el personal y las rutas de ejemplo viven en `src/premium-data.js`. El acto conecta las pruebas de reserva, mantenimiento, asignación, caja y reportes durante la sesión del navegador. La secuencia de seguimiento puede compartirse mediante un enlace que conserva el avance o la fecha de inicio de la simulación.
 
 Las fotografías usan composiciones WebP independientes en cada orientación. Las capturas son imágenes de la PWA con datos de demostración. Los créditos se publican en `creditos.html`.

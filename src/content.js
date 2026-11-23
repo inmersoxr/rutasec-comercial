@@ -13,7 +13,7 @@ export const chapters = [
   ['modalidades', 'Una plataforma. Diferentes formas de viajar.', 'La experiencia del viaje'],
   ['pasajero', 'Viajar nunca fue tan sencillo.'],
   ['standard', 'El control de tu operación.', 'La transformación empresarial'],
-  ['premium', 'Tu centro de operaciones digital.'],
+  ['premium', 'Tu marca. Toda tu operación.'],
   ['seguimiento', 'Viajes conectados.'],
   ['simulador', 'Descubre el potencial de tus rutas.'],
   ['planes', 'Crece con nosotros.'],
@@ -51,22 +51,17 @@ export const standard = [
   ['Organiza el abordaje', 'Consulta el manifiesto de pasajeros, registra quién abordó y revisa el historial. La validación mediante QR se muestra como demostración.', 'sales'],
 ];
 
-export const premium = [
-  ['Seguimiento vehicular', 'Consulta unidades, recorridos, estados y tiempos estimados desde un mapa de operaciones.', [['En recorrido','2 unidades'],['Programadas','1 salida'],['Ubicación','Simulada']]],
-  ['Gestión de conductores', 'Consulta el personal disponible y asigna conductores a los viajes y vehículos de la empresa.', [['Diego Torres','En recorrido'],['Sara Pérez','Asignada'],['Andrés Mora','Disponible']]],
-  ['Administración de flota', 'Organiza documentación, disponibilidad de vehículos y fechas de mantenimiento.', [['EC–014 · Furgoneta','En servicio'],['EC–021 · SUV','Disponible'],['EC–036 · Furgoneta','Revisión programada']]],
-  ['Centro de operaciones', 'Coordina programación, despachos, asignaciones e incidencias de las salidas.', [['Despacho de la mañana','Confirmado'],['Siguiente salida','10:30'],['Incidencias abiertas','1']]],
-  ['Finanzas y facturación', 'Revisa ingresos, gastos, liquidaciones y registros de facturación de la operadora.', [['Ingresos registrados','$1.560,00'],['Gastos operativos','$420,00'],['Liquidaciones pendientes','2']]],
-  ['Inteligencia comercial', 'Consulta la ocupación, las ventas y el rendimiento de las rutas para ajustar tu oferta.', [['Ocupación promedio','72 %'],['Asientos vendidos','84'],['Rutas evaluadas','3']]],
-];
-
 export const comparison = [
   ['Perfil comercial, viajes y reservas digitales', true, true],
   ['Control de asientos, manifiestos y validación QR', true, true],
   ['Gestión de ventas e historial de viajes', true, true],
+  ['Mini app con tu marca, enlace directo y venta de boletos', false, true],
   ['Centro de operaciones avanzado y seguimiento de flota', false, true],
-  ['Gestión de conductores, flota y mantenimiento', false, true],
-  ['Finanzas, facturación y reportes empresariales', false, true],
+  ['Personal, asignación de vehículos y mantenimiento', false, true],
+  ['Caja, cuentas por cobrar y pagar, facturación y liquidaciones', false, true],
+  ['Roles de pago, remuneraciones, anticipos y permisos', false, true],
+  ['Analítica por ruta, unidad y servicio', false, true],
+  ['Sucursales, identidad y permisos empresariales', false, true],
 ];
 
 export const photoDescriptions = {

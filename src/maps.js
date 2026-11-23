@@ -1,3 +1,4 @@
+import { corridors, fleet } from './premium-data.js';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -5,7 +6,7 @@ const duration = 110_000;
 const shapeSource = './media/route.json';
 const selector = name => document.querySelector(name);
 const initialPart = .22;
-const vehicleIcon = label => L.divIcon({ html: label, className: 'map-vehicle', iconSize: [29, 29], iconAnchor: [14, 14] });
+const vehicleIcon = (label, anchor = [14, 14]) => L.divIcon({ html: label, className: 'map-vehicle', iconSize: [29, 29], iconAnchor: anchor });
 
 function createMap(id, boundary) {
   const map = L.map(id, { scrollWheelZoom: false, touchZoom: true, dragging: !L.Browser.touch, attributionControl: true });
@@ -53,31 +54,78 @@ function distanceIndex(coordinates) {
   };
 }
 
-function setupFleet(route, at, boundary) {
+function setupFleet(shapes, boundary) {
   const map = createMap('fleet-map', boundary);
-  const extent = drawRoute(map, route.coordinates).getBounds();
-  const fleet = [['EC–014', 'En recorrido · ETA 52 min', .39], ['EC–021', 'En recorrido · ETA 18 min', .82], ['EC–036', 'Salida programada · 10:30', .02]];
+  const bounds = L.latLngBounds([]);
+  const labeled = new Set();
+  const routes = Object.fromEntries(Object.entries(shapes).map(([id, points]) => {
+    L.polyline(points, { color: '#536d50', weight: 6, opacity: .72, interactive: false }).addTo(map);
+    const line = L.polyline(points, { color: '#f1cc4c', weight: 3, interactive: false }).addTo(map);
+    bounds.extend(line.getBounds());
+    for (const [name, point] of [[corridors[id].origin, points[0]], [corridors[id].destination, points.at(-1)]]) {
+      if (labeled.has(name)) continue;
+      labeled.add(name);
+      L.circleMarker(point, { radius: 3, color: '#416448', weight: 2, interactive: false }).addTo(map)
+        .bindTooltip(name, { permanent: true, direction: 'top', offset: [0, -5], className: 'fleet-city-label' });
+    }
+    return [id, distanceIndex(points)];
+  }));
   const buttons = [...document.querySelectorAll('[data-unit]')];
-  const status = selector('#fleet-status');
+  // Offset the two co-located Cuenca units so both markers can be selected.
+  const anchors = { 'EC–036': [28, 19], 'EC–052': [-8, -7] };
+  const markers = fleet.map(({ id, model, status, position, corridor }, index) =>
+    L.marker(routes[corridor](position), {
+      icon: vehicleIcon(index + 1, anchors[id]), title: id, alt: `${id} · ${model} · ${status}`,
+    }).addTo(map).bindTooltip(`${id} · ${model}`).on('click', () => buttons[index].click()));
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  buttons.forEach((button, index) => button.addEventListener('click', () => {
+    markers.forEach((marker, i) => marker.getElement()?.classList.toggle('is-selected', index === i));
+    map.panTo(markers[index].getLatLng(), { animate: !reduced.matches });
+  }));
 
-  function select(index, center = true) {
-    const [id, detail, position] = fleet[index];
-    status.textContent = `${id} · ${detail}`;
-    buttons.forEach((button, i) => button.setAttribute('aria-pressed', String(i === index)));
-    if (center) map.panTo(at(position), { animate: !matchMedia('(prefers-reduced-motion: reduce)').matches });
-  }
-  fleet.forEach(([id, detail, position], index) => {
-    L.marker(at(position), { icon: vehicleIcon(index + 1), title: id, alt: `${id} · ${detail}` })
-      .addTo(map).bindTooltip(id).on('click', () => select(index));
-  });
-  buttons.forEach((button, index) => button.addEventListener('click', () => select(index)));
   function fit() {
     map.invalidateSize({ pan: false });
-    map.fitBounds(extent, { padding: [22, 22], animate: false });
+    const dock = selector('.fleet-dock');
+    const overlay = getComputedStyle(dock).position === 'absolute' ? dock.offsetWidth + 24 : 0;
+    map.fitBounds(bounds, { paddingTopLeft: [26, 25], paddingBottomRight: [26 + overlay, 36], animate: false });
   }
-  selector('.ops-map-wrap').addEventListener('map:reveal', () => requestAnimationFrame(fit));
+  selector('#fleet-fit').addEventListener('click', fit);
   fit();
-  select(0, false);
+  markers[0].getElement()?.classList.add('is-selected');
+
+  let animation = 0;
+  let visible = false;
+  let paused = false;
+  let elapsed = 0;
+  let last = 0;
+  const toggle = selector('#fleet-motion');
+  function frame(now) {
+    if (last) elapsed += Math.min(100, now - last);
+    last = now;
+    fleet.forEach(({ position, status, corridor }, index) => {
+      if (status !== 'En recorrido') return;
+      const offset = (elapsed / 480000) % .075;
+      markers[index].setLatLng(routes[corridor](Math.min(.997, position + offset)));
+    });
+    animation = requestAnimationFrame(frame);
+  }
+  function syncAnimation() {
+    cancelAnimationFrame(animation);
+    last = 0;
+    toggle.hidden = reduced.matches;
+    if (visible && !paused && !document.hidden && !reduced.matches) animation = requestAnimationFrame(frame);
+  }
+  new IntersectionObserver(([entry]) => {
+    visible = entry.isIntersecting;
+    syncAnimation();
+  }).observe(map.getContainer());
+  toggle.addEventListener('click', () => {
+    paused = !paused;
+    toggle.textContent = paused ? 'Reanudar simulación' : 'Pausar simulación';
+    syncAnimation();
+  });
+  document.addEventListener('visibilitychange', syncAnimation);
+  reduced.addEventListener('change', syncAnimation);
 }
 
 function setupTracking(route, at, boundary) {
@@ -173,14 +221,19 @@ function setupTracking(route, at, boundary) {
 }
 
 export async function configureMaps() {
-  const [response, boundary] = await Promise.all([
+  const [response, boundary, premiumRoutes] = await Promise.all([
     fetch(shapeSource),
     fetch('./media/ecuador-boundary.json').then(result => result.ok ? result.json() : null).catch(() => null),
+    fetch('./media/premium-routes.json').then(result => result.ok ? result.json() : null).catch(() => null),
   ]);
   if (!response.ok) throw new Error('Error al cargar el recorrido.');
   const route = await response.json();
-  route.coordinates = route.coordinates.map(([longitude, latitude]) => [latitude, longitude]);
-  const at = distanceIndex(route.coordinates);
-  setupFleet(route, at, boundary);
-  setupTracking(route, at, boundary);
+  const toLatLng = points => points.map(([longitude, latitude]) => [latitude, longitude]);
+  route.coordinates = toLatLng(route.coordinates);
+  setupTracking(route, distanceIndex(route.coordinates), boundary);
+  if (premiumRoutes?.quito && premiumRoutes?.manta) {
+    setupFleet({ cuenca: route.coordinates, quito: toLatLng(premiumRoutes.quito), manta: toLatLng(premiumRoutes.manta) }, boundary);
+  } else {
+    selector('#fleet-map').textContent = 'No se pudieron cargar las rutas de la flota. Puedes consultar las fichas de las unidades.';
+  }
 }

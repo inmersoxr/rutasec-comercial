@@ -1,5 +1,6 @@
 import widths from './photo-widths.json';
-import { chapters, comparison, modes, photoDescriptions, places, premium, standard, trip } from './content.js';
+import { renderPremiumDemo } from './premium.js';
+import { chapters, comparison, modes, photoDescriptions, places, standard, trip } from './content.js';
 
 const linkIcon = direction => `<svg class="link-icon" viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="${direction === 'up' ? 'M3.5 12.5 12 4m-6.5 0H12v6.5' : 'm3.5 3.5 8.5 8.5m0-6.5V12H5.5'}"/></svg>`;
 const chevron = linkIcon('down');
@@ -16,9 +17,6 @@ export function photo(name, alt, options = {}) {
 
 const capture = (name, alt, kind = '') => `<figure class="capture ${kind}"><img src="./media/app-${name}.webp" alt="${alt}" loading="lazy" decoding="async"></figure>`;
 const sectionTitle = (label, title, extra = '') => `<p class="eyebrow">${label}</p><h2 ${extra}>${title}</h2>`;
-const indexNumbers = (count, getText) => Array.from({ length: count }, (_, i) =>
-  `<button type="button" data-step="${i}" aria-pressed="${i === 0}"><span class="step-num">${String(i + 1).padStart(2, '0')}</span><span>${getText(i)}</span></button>`).join('');
-
 function navigation() {
   return `<a href="#ecuador" class="skip">Saltar al contenido</a>
   <header class="topbar">
@@ -57,23 +55,19 @@ function hero() {
 }
 
 function network() {
-  return `<section class="network scene paper" id="red" aria-labelledby="red-title">
-    <div class="network-frame wrap">
-      <div class="network-copy">
+  return `<section class="network scene" id="red" aria-labelledby="red-title">
+    <div class="network-frame">
+      ${places.map(([city, reason, file, alt], index) => `<figure class="destination${index === 0 ? ' is-active' : ''}" aria-hidden="${index !== 0}" style="--portrait: url('${new URL(`./media/${file}-portrait-small.webp`, document.baseURI).href}')">
+        ${photo(file, alt)}
+        <figcaption class="wrap"><strong>${city}</strong><span>${reason}</span></figcaption>
+      </figure>`).join('')}
+      <div class="network-shade"></div>
+      <div class="network-copy wrap">
         ${sectionTitle('Una red nacional de transporte', 'Más rutas.<br>Más oportunidades.', 'id="red-title"')}
-        <p>RutasEC reúne la oferta de distintas operadoras. Cuando alguien busca un destino por trabajo, estudios, turismo, negocios o para visitar a su familia, puede encontrar los servicios que tu empresa publica.</p>
-        <p>Tu perfil reúne vehículos, horarios, tarifas y servicios. Los pasajeros pueden conocer tu oferta antes de reservar. Las valoraciones se ilustran en el recorrido de la pasajera.</p>
-        <div class="network-controls" aria-label="Recorrer destinos"><button type="button" data-network="-1" aria-label="Destino anterior">←</button><button type="button" data-network="1" aria-label="Destino siguiente">→</button></div>
+        <p>RutasEC reúne la oferta de distintas operadoras. Los pasajeros encuentran tus viajes cuando buscan un destino por trabajo, estudios, turismo, negocios o para visitar a su familia.</p>
+        <p>Tu perfil reúne vehículos, horarios, tarifas y servicios. Los pasajeros pueden conocer tu oferta antes de reservar.</p>
       </div>
-      <div class="network-window">
-        <div class="network-track">
-          ${places.map(([city, reason, file, alt]) => `<figure class="destination">
-            ${photo(file, alt)}
-            <figcaption><strong>${city}</strong><span>${reason}</span></figcaption>
-          </figure>`).join('')}
-        </div>
-        <svg class="network-line" viewBox="0 0 620 180" preserveAspectRatio="none" aria-hidden="true"><path d="M-20 140C74 25 113 24 196 75S302 150 351 92 437 1 501 38 559 112 645 14"/><circle cx="196" cy="75" r="7"/><circle cx="351" cy="92" r="7"/><circle cx="501" cy="38" r="7"/></svg>
-      </div>
+      <button type="button" class="network-pause">Pausar fotos</button>
     </div>
   </section>`;
 }
@@ -158,27 +152,13 @@ function premiumScene() {
       ${photo('ops', 'Equipo de despacho en un centro de operaciones')}
       <div class="premium-shade"></div>
       <div class="premium-intro wrap">
-        ${sectionTitle('RutasEC Premium', 'Tu centro de<br>operaciones digital.', 'id="premium-title"')}
-        <p>Gestiona desde un mismo lugar los vehículos, las personas y las tareas que hacen posible cada salida. Explora cómo se organiza la operación de una empresa dentro de Premium.</p>
-        <a class="ink-link" href="#premium-demo">Explorar la demostración ${chevron}</a>
+        ${sectionTitle('RutasEC Premium', 'Tu marca.<br>Toda tu operación.', 'id="premium-title"')}
+        <p>Tu operadora tiene su propia mini app dentro de RutasEC. Tus pasajeros la abren desde un enlace, reconocen tu marca y compran tus boletos. Tus salidas también aparecen en el buscador general de RutasEC.</p>
+        <p>Tu equipo trabaja en el panel privado de la misma operadora. Desde ahí organiza personal y flota, asigna conductores y vehículos a las salidas y controla reservas, cobros, facturas y gastos.</p>
+        <a class="ink-link" href="#premium-demo">Explorar RutasEC Premium ${chevron}</a>
       </div>
     </div>
-    <div class="ops-wrap wrap" id="premium-demo">
-      <div class="ops">
-        <header class="ops-head"><div><img src="./media/logo.svg" alt="" width="28" height="28"><strong>Centro de operaciones</strong></div><span class="demo-label">Demostración · Datos simulados</span></header>
-        <div class="ops-body">
-          <div class="ops-nav" aria-label="Módulos del centro de operaciones">${indexNumbers(premium.length, i => premium[i][0])}</div>
-          <div class="ops-main">
-            <h3 id="ops-title">${premium[0][0]}</h3><p id="ops-description">${premium[0][1]}</p>
-            <div class="ops-map-wrap"><div class="map-surface" id="fleet-map" aria-label="Mapa de vehículos simulados"></div>
-              <div class="fleet-select" aria-label="Seleccionar vehículo"><button type="button" data-unit="0" aria-pressed="true">EC–014</button><button type="button" data-unit="1" aria-pressed="false">EC–021</button><button type="button" data-unit="2" aria-pressed="false">EC–036</button></div>
-              <p id="fleet-status" role="status">EC–014 · En recorrido</p>
-            </div>
-            <dl id="ops-data"></dl>
-          </div>
-        </div>
-      </div>
-    </div>
+    ${renderPremiumDemo()}
   </section>`;
 }
 
@@ -234,11 +214,11 @@ function plans() {
   return `<section class="plans scene paper" id="planes" aria-labelledby="plans-title">
     <div class="wrap plans-layout">
       <div>${sectionTitle('RutasEC Standard y Premium', 'Crece con nosotros.', 'id="plans-title"')}</div>
-      <p>Con Standard puedes incorporar tus viajes a la red y gestionar las reservas que recibes. Premium suma herramientas para coordinar vehículos, personal, operaciones y resultados de la empresa.</p>
+      <p>Con Standard puedes incorporar tus viajes a la red y gestionar las reservas que recibes. Premium suma una mini app pública personalizable y un panel privado donde tu equipo gestiona empleados, vehículos, salidas, reservas, cobros y facturación.</p>
       <div class="compare">
         <table aria-describedby="compare-note"><thead><tr><th scope="col">Capacidades</th><th scope="col">Standard<span>Sin mensualidad</span></th><th scope="col">Premium<span>Suscripción · Consultar</span></th></tr></thead>
-        <tbody>${comparison.map(([label,a,b]) => `<tr><th scope="row">${label}</th><td>${a ? 'Incluido' : '<span aria-label="Fuera del plan">—</span>'}</td><td>${b ? 'Incluido' : '<span aria-label="Fuera del plan">—</span>'}</td></tr>`).join('')}</tbody></table>
-        <p id="compare-note">Conoce el alcance disponible para tu empresa al solicitar una demostración. La landing presenta ejemplos de las funciones demostrativas.</p>
+        <tbody>${comparison.map(([label,a,b]) => `<tr><th scope="row">${label}</th><td>${a ? 'Incluido' : '<span aria-label="Fuera del plan">—</span>'}</td><td>${b ? (a ? 'Incluido' : 'Previsto') : '<span aria-label="Fuera del plan">—</span>'}</td></tr>`).join('')}</tbody></table>
+        <p id="compare-note">La demostración ilustra el alcance empresarial previsto de Premium. Consulta la disponibilidad de cada módulo e integración al solicitar una demostración.</p>
       </div>
       <a class="ink-link" href="#asociar">Consultar un plan ${chevron}</a>
     </div>

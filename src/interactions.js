@@ -1,5 +1,5 @@
 import gsap from 'gsap';
-import { contacts, premium, trip } from './content.js';
+import { contacts, trip } from './content.js';
 
 const q = selector => document.querySelector(selector);
 const all = selector => [...document.querySelectorAll(selector)];
@@ -79,31 +79,6 @@ export function configurePassenger() {
   }
   window.addEventListener('scroll', onScroll, { passive: true });
   activate(0);
-}
-
-export function configurePremium() {
-  const buttons = all('[data-step]');
-  const list = q('#ops-data');
-  const map = q('.ops-map-wrap');
-  function select(index) {
-    const [title, description, metrics] = premium[index];
-    q('#ops-title').textContent = title;
-    q('#ops-description').textContent = description;
-    buttons.forEach((button, i) => button.setAttribute('aria-pressed', String(i === index)));
-    map.hidden = index !== 0;
-    list.replaceChildren(...metrics.map(([label, value]) => {
-      const group = document.createElement('div');
-      const term = document.createElement('dt');
-      const detail = document.createElement('dd');
-      term.textContent = label;
-      detail.textContent = value;
-      group.append(term, detail);
-      return group;
-    }));
-    if (index === 0) map.dispatchEvent(new Event('map:reveal', { bubbles: true }));
-  }
-  buttons.forEach((button, index) => button.addEventListener('click', () => select(index)));
-  select(0);
 }
 
 export function configureSimulator() {
