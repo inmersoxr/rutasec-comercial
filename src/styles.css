@@ -70,7 +70,7 @@ h3 { font-size: clamp(26px, 4vw, 49px); font-weight: 720; line-height: 1.04; let
 .hero-copy .ink-link { margin-top: 18px; color: var(--acid); }
 
 .cinema { min-height: calc(100dvh + var(--runway)); }
-.cinema-stage { position: sticky; top: 0; --deck: 62px; }
+.cinema-stage { position: sticky; top: 0; touch-action: pan-x pinch-zoom; --deck: 62px; }
 .cinema-title { position: absolute; z-index: 4; top: calc(var(--nav-height) + clamp(20px, 5dvh, 54px)); inset-inline: 0; pointer-events: none; }
 .cinema-title h2 { font-size: clamp(61px, 8.7vw, 132px); max-width: 16ch; text-wrap: balance; }
 .cinema-title .eyebrow { margin-bottom: 10px; }
