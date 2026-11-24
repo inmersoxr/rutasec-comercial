@@ -1,6 +1,6 @@
 # RutasEC — Conecta Ecuador
 
-Presentación comercial independiente de la PWA. La landing contiene tres actos y once secciones, un simulador de ventas, un acto Premium de diez capítulos, demostraciones de seguimiento, y un formulario de incorporación de operadoras.
+Presentación comercial independiente de la PWA. La landing se monta en siete escenas. En modalidades, pasajeros, Standard y Premium el scroll controla los beats de una composición fija. Los módulos detallados de Premium, el seguimiento, la comparativa, el simulador y el formulario se abren dentro del recorrido y tienen enlaces directos.
 
 ## Desarrollo
 

@@ -1,179 +1,169 @@
 import widths from './photo-widths.json';
+import { comparison, modes, places, standard } from './content.js';
 import { renderPremiumDemo } from './premium.js';
-import { chapters, comparison, modes, photoDescriptions, places, standard, trip } from './content.js';
 
-const linkIcon = direction => `<svg class="link-icon" viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="${direction === 'up' ? 'M3.5 12.5 12 4m-6.5 0H12v6.5' : 'm3.5 3.5 8.5 8.5m0-6.5V12H5.5'}"/></svg>`;
-const chevron = linkIcon('down');
-const arrow = linkIcon('up');
+const arrow = '<svg class="link-icon" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4m-6 0h6v6"/></svg>';
+const chevron = '<span aria-hidden="true">↓</span>';
+const media = './media/';
+const logo = `<img class="brand-logo" src="${media}logo.svg" alt="RutasEC" width="80" height="65">`;
 
-export function photo(name, alt, options = {}) {
-  const { eager = false, className = '' } = options;
+const navLinks = [
+  ['ecuador', 'Inicio'], ['red', 'Destinos'], ['modalidades', 'Cómo funciona'],
+  ['pasajero', 'Pasajeros'], ['standard', 'Standard'], ['premium', 'Premium'], ['asociar', 'Contacto'],
+];
+
+export function photo(name, alt, { eager = false, className = '' } = {}) {
+  const variants = parts => parts.map(part => `${media}${part}.webp ${widths[part]}w`).join(', ');
   return `<picture class="photo ${className}" data-photo="${name}">
-    <source media="(max-width: 720px)" srcset="./media/${name}-portrait-small.webp ${widths[name + '-portrait-small']}w, ./media/${name}-portrait.webp ${widths[name + '-portrait']}w" sizes="100vw">
-    <img src="./media/${name}.webp" srcset="./media/${name}-small.webp ${widths[name + '-small']}w, ./media/${name}.webp ${widths[name]}w" sizes="100vw" alt="${alt}" width="1600" height="900"
-      loading="${eager ? 'eager' : 'lazy'}" ${eager ? 'fetchpriority="high"' : 'decoding="async"'}>
+    <source media="(max-width: 720px)" srcset="${variants([name + '-portrait-small', name + '-portrait'])}" sizes="100vw">
+    <img src="${media}${name}.webp" srcset="${variants([name + '-small', name])}" sizes="100vw" alt="${alt}" width="1600" height="900" loading="${eager ? 'eager' : 'lazy'}" ${eager ? 'fetchpriority="high"' : 'decoding="async"'}>
   </picture>`;
 }
 
-const capture = (name, alt, kind = '') => `<figure class="capture ${kind}"><img src="./media/app-${name}.webp" alt="${alt}" loading="lazy" decoding="async"></figure>`;
 const sectionTitle = (label, title, extra = '') => `<p class="eyebrow">${label}</p><h2 ${extra}>${title}</h2>`;
+const actLink = (id, label, style = 'ink-link') => `<a class="${style}" href="#${id}">${label} ${arrow}</a>`;
+const badge = label => `<span class="demo-label">${label}</span>`;
+const capture = (file, alt) => `<figure class="scene-capture phone"><img src="${media}app-${file}.webp" alt="${alt}" loading="lazy" decoding="async"></figure>`;
+
 function navigation() {
-  return `<a href="#ecuador" class="skip">Saltar al contenido</a>
+  const links = navLinks.slice(1, -1);
+  return `<a class="skip" href="#ecuador">Saltar al contenido</a>
   <header class="topbar">
-    <a class="wordmark" href="#ecuador" aria-label="RutasEC · Inicio"><img src="./media/logo.svg" alt="" width="40" height="40"><span>Rutas<b>EC</b></span></a>
-    <nav aria-label="Actos de la presentación" class="primary-nav">
-      ${chapters.filter(([, , act]) => act).map(([id, , act]) => `<a href="#${id}">${act}</a>`).join('')}
-    </nav>
-    <div class="top-actions"><button type="button" class="index-toggle" aria-controls="chapter-menu" aria-expanded="false" aria-label="Índice de la presentación"><span></span><span></span></button><a class="top-cta" href="#asociar">Asociar mi empresa ${arrow}</a></div>
+    <a class="wordmark" href="#ecuador" aria-label="RutasEC · Inicio">${logo}</a>
+    <nav class="primary-nav" aria-label="Recorrido">${links.map(([id, label]) => `<a href="#${id}">${label}</a>`).join('')}</nav>
+    <div class="top-actions"><a href="#incorporacion" class="top-cta">Asociar mi empresa ${arrow}</a>
+      <button type="button" class="index-toggle" aria-controls="chapter-menu" aria-expanded="false" aria-label="Abrir menú"><span></span><span></span></button>
+    </div>
   </header>
   <nav class="chapter-menu" id="chapter-menu" aria-label="Capítulos de la presentación" hidden>
-    <ol>${chapters.map(([id, title, act]) => `<li>${act ? `<span class="menu-act">${act}</span>` : ''}<a href="#${id}">${title} ${arrow}</a></li>`).join('')}</ol>
-  </nav>
-  <div class="scroll-meter" aria-hidden="true"></div>`;
+    ${navLinks.map(([id, label]) => `<a href="#${id}">${label} ${arrow}</a>`).join('')}
+  </nav><div class="scroll-meter" aria-hidden="true"></div>`;
 }
 
-function hero() {
-  return `<section class="hero scene" id="ecuador" aria-labelledby="hero-title">
-    <div class="hero-frame">
-      ${photo('hero', 'Carretera entre montañas del Ecuador a última hora de la tarde', { eager: true })}
-      <div class="hero-shade"></div>
-      <div class="hero-grid wrap">
-        <div class="hero-intro">
-          <p class="eyebrow hero-eyebrow">Plataforma de transporte interprovincial</p>
-          <h1 id="hero-title" aria-label="Conecta Ecuador."><span aria-hidden="true" data-letters>CONECTA</span><span aria-hidden="true" data-letters>ECUADOR<span class="hero-dot">.</span></span></h1>
-          <p class="hero-line">Nuevos pasajeros. Nuevas oportunidades.<br>Una red nacional de transporte.</p>
-        </div>
-        <div class="hero-detail">
-          <p>RutasEC conecta a personas que necesitan viajar entre ciudades con empresas de transporte privado del Ecuador.</p>
-          <p>Los pasajeros comparan opciones y reservan desde su teléfono. Tu empresa publica sus viajes, llega a nuevos clientes y organiza las reservas.</p>
-          <a class="ink-link" href="#red">Conoce cómo funciona ${chevron}</a>
-        </div>
-      </div>
-      <div class="hero-bottom wrap"><span>Ecuador conectado</span><a href="#red" aria-label="Continuar a Más rutas. Más oportunidades.">Desliza <span aria-hidden="true">↓</span></a></div>
+function openScene() {
+  return `<section class="hero cinema-open" id="ecuador" aria-labelledby="hero-title">
+    ${photo('hero', 'Furgoneta en una carretera de montaña del Ecuador', { eager: true })}
+    <div class="cinema-shade"></div>
+    <div class="hero-copy wrap">
+      <p class="eyebrow">Plataforma de transporte interprovincial</p>
+      <h1 id="hero-title">Conecta<br>Ecuador<span>.</span></h1>
+      <p>Publica tus viajes, vende tus boletos y gestiona tu operación. Tus pasajeros pueden encontrar, comparar y reservar sus viajes desde el teléfono.</p>
+      <a href="#red" class="ink-link">Recorrer RutasEC ${chevron}</a>
     </div>
   </section>`;
 }
 
 function network() {
-  return `<section class="network scene" id="red" aria-labelledby="red-title">
+  return `<section class="network" id="red" aria-labelledby="red-title">
     <div class="network-frame">
-      ${places.map(([city, reason, file, alt], index) => `<figure class="destination${index === 0 ? ' is-active' : ''}" aria-hidden="${index !== 0}" style="--portrait: url('${new URL(`./media/${file}-portrait-small.webp`, document.baseURI).href}')">
+      ${places.map(([city, reason, file, alt], i) => `<figure class="destination${i === 0 ? ' is-active' : ''}" aria-hidden="${i !== 0}" style="--portrait: url('${new URL(`./media/${file}-portrait-small.webp`, document.baseURI).href}')">
         ${photo(file, alt)}
         <figcaption class="wrap"><strong>${city}</strong><span>${reason}</span></figcaption>
       </figure>`).join('')}
       <div class="network-shade"></div>
       <div class="network-copy wrap">
         ${sectionTitle('Una red nacional de transporte', 'Más rutas.<br>Más oportunidades.', 'id="red-title"')}
-        <p>RutasEC reúne la oferta de distintas operadoras. Los pasajeros encuentran tus viajes cuando buscan un destino por trabajo, estudios, turismo, negocios o para visitar a su familia.</p>
-        <p>Tu perfil reúne vehículos, horarios, tarifas y servicios. Los pasajeros pueden conocer tu oferta antes de reservar.</p>
+        <p>Cuando alguien busca una ruta por trabajo, estudios, turismo o para visitar a su familia, puede encontrar tus viajes. Tu perfil le permite conocer tus vehículos, horarios, tarifas y servicios antes de reservar.</p>
       </div>
       <button type="button" class="network-pause">Pausar fotos</button>
     </div>
   </section>`;
 }
 
-function company() {
-  return `<section class="company scene" id="empresa" aria-labelledby="empresa-title">
-    <div class="company-frame">
-      ${photo('fleet', 'Equipo de una operadora junto a sus vehículos')}
-      <div class="company-shade"></div>
-      <div class="company-layout wrap">
-        <div>
-          ${sectionTitle('Un canal de ventas para tu operadora', 'Tu empresa.<br>Tus vehículos.<br>Tus tarifas.', 'id="empresa-title"')}
-          <p>Publica las rutas que ya operas con tus propios vehículos. Define horarios, fija tu tarifa y decide cuántos asientos ofrecer en cada salida.</p>
-          <p>Cuando un pasajero busca ese trayecto, puede encontrar tu viaje y reservarlo. Tu equipo recibe la reserva y gestiona el cupo desde el panel de operadora.</p>
-        </div>
-        <div class="company-capture">
-          ${capture('operator', 'Pantalla de la PWA para publicar una salida', 'phone')}
-          <p>Publicación de salidas · Captura de la PWA</p>
-        </div>
+function renderBeat(beat, index) {
+  const current = index === 0;
+  return `<article class="beat${current ? ' is-active' : ''}" data-beat ${current ? '' : 'inert aria-hidden="true"'}>
+    ${photo(beat.image, beat.alt)}
+    <div class="cinema-shade"></div>
+    <div class="beat-content wrap">
+      <div class="beat-copy">
+        <h3>${beat.title}</h3>
+        <p>${beat.copy}</p>
+        ${beat.badge ? badge(beat.badge) : ''}
+        ${beat.links?.length ? `<div class="beat-links">${beat.links.map(([id, name]) => actLink(id, name)).join('')}</div>` : ''}
+      </div>
+      ${beat.screen ? capture(beat.screen, `Vista de RutasEC: ${beat.title}`) : ''}
+      ${beat.preview ? `<aside class="beat-preview" aria-label="Ejemplo de interfaz"><span>${beat.preview[0]}</span><strong>${beat.preview[1]}</strong><small>${beat.preview[2]}</small></aside>` : ''}
+    </div>
+  </article>`;
+}
+
+function story({ id, label, title, beats, runway }) {
+  return `<section class="cinema" id="${id}" style="--runway:${runway}svh" aria-labelledby="${id}-title">
+    <div class="cinema-stage">
+      <div class="cinema-title wrap">${sectionTitle(label, title, `id="${id}-title"`)}</div>
+      ${beats.map(renderBeat).join('')}
+      <div class="beat-control wrap" role="group" aria-label="Secuencia de ${label}">
+        ${beats.map((beat, i) => `<button type="button" data-jump="${i}" aria-pressed="${i === 0}">${beat.label}</button>`).join('')}
       </div>
     </div>
   </section>`;
 }
 
-function travelModes() {
-  return `<section class="modes scene" id="modalidades" aria-labelledby="modalidades-title">
-    <div class="modes-intro wrap">
-      ${sectionTitle('La experiencia del viaje', 'Una plataforma.<br>Diferentes formas de viajar.', 'id="modalidades-title"')}
-      <p>Ofrece lugares en tus salidas habituales, contrata un vehículo completo o prepara una propuesta para un itinerario a medida.</p>
+const travel = {
+  id: 'modalidades', label: 'La experiencia del viaje', title: 'Diferentes formas de viajar.', runway: 62,
+  beats: modes.map(([title, image, alt, copy, badge], i) => ({
+    title, image, alt, copy, badge, label: ['Compartido', 'Privado', 'Personalizado'][i],
+  })),
+};
+
+const passenger = {
+  id: 'pasajero', label: 'Del primer clic a la llegada', title: 'Así viaja un pasajero.', runway: 79,
+  beats: [
+    { label: 'Busca', title: 'Encuentra su viaje', copy: 'Elige origen, destino y fecha. Compara horarios, tarifas, vehículos y cupos de distintas operadoras antes de decidir.', image: 'booking', alt: 'Pasajera consultando un viaje en el teléfono', screen: 'results' },
+    { label: 'Reserva', title: 'Recibe su boleto', copy: 'Selecciona los asientos, confirma el pago de demostración y recibe un boleto digital con los datos de su salida.', image: 'welcome', alt: 'Pasajera junto a una furgoneta en el punto de embarque', screen: 'ticket' },
+    { label: 'Aborda', title: 'Presenta su código QR', copy: 'El conductor valida el boleto antes de abordar. La operadora registra el embarque en el manifiesto del viaje.', image: 'qr', alt: 'Una pasajera sostiene el teléfono mientras el conductor escanea su boleto' },
+    { label: 'Comparte', title: 'Su familia sigue el recorrido', copy: 'La pasajera comparte un enlace con el mapa y el tiempo estimado de llegada. Al completar el viaje, puede valorar el servicio en el flujo ilustrativo.', image: 'cabin', alt: 'Pasajera mirando por la ventana durante el viaje', screen: 'tracking', links: [['tracking-demo', 'Probar seguimiento']] },
+  ],
+};
+
+const operators = {
+  id: 'standard', label: 'RutasEC Standard', title: 'Tus viajes, en el marketplace.', runway: 60,
+  beats: standard.map(([title, copy, screen], i) => ({
+    title, copy: i === 0 ? `${copy} Standard permite publicar y recibir reservas sin mensualidad.` : copy,
+    label: ['Publicar', 'Reservas', 'Embarque'][i], screen,
+    image: ['fleet','premium-despacho','qr'][i],
+    alt: ['Flota de transporte de una operadora','Equipo de despacho de una operadora','Validación del boleto antes de abordar'][i],
+  })),
+};
+
+const enterprise = {
+  id: 'premium', label: 'RutasEC Premium', title: 'Tu marca. Toda tu operación.', runway: 112,
+  beats: [
+    { label: 'Tu mini app', title: 'Un espacio con tu marca', copy: 'Personaliza tu perfil, logotipo, colores y servicios. Comparte tu enlace para vender en tu propia mini app y mantén tus salidas visibles en el buscador de RutasEC.', image: 'premium-ventas', alt: 'Pasajera haciendo una reserva desde el teléfono', preview: ['Vista de una operadora', 'Andes Movilidad', 'Rutas · Horarios · Reservar'], links: [['premium-marca', 'Probar personalización'], ['premium-demo', 'Ver ejemplos de marca']] },
+    { label: 'Operaciones', title: 'Cada salida, coordinada', copy: 'Asigna a una persona y a un vehículo desde despacho. Durante el viaje, el equipo consulta en qué ruta va la unidad, quién conduce y a qué hora llegará.', image: 'premium-despacho', alt: 'Responsable de despacho supervisando una flota de transporte ecuatoriana', preview: ['Centro de operaciones', 'Cuenca → Guayaquil', 'Vehículo y conductor asignados'], links: [['premium-operaciones', 'Abrir mapa de flota']] },
+    { label: 'Flota y equipo', title: 'Tu flota lista para salir', copy: 'Consulta el odómetro, los documentos y el próximo mantenimiento de cada unidad. Vincula los turnos y licencias de tus conductores a los viajes que tienen asignados.', image: 'premium-taller', alt: 'Mecánico y conductor revisan una furgoneta en el taller', preview: ['Ficha del vehículo', 'Revisión programada', 'Disponible después del servicio'], links: [['premium-flota', 'Ver ficha del vehículo'], ['premium-personal', 'Ver perfil del empleado']] },
+    { label: 'Ventas y caja', title: 'Del boleto a la caja', copy: 'Cada reserva se relaciona con su pasajero y su viaje. Registra cobros, pagos y gastos por unidad y consulta los comprobantes asociados en Finanzas.', image: 'premium-finanzas', alt: 'Dos personas de una operadora revisan los comprobantes del día', preview: ['Venta directa', 'Boleto confirmado', 'Cobro vinculado al viaje'], links: [['premium-ventas', 'Simular una reserva'], ['premium-finanzas', 'Abrir Finanzas']] },
+    { label: 'Reportes', title: 'Decide con tu operación a la vista', copy: 'Compara ocupación, ventas y costos por ruta o vehículo. La suscripción reúne reportes, gestión y comercialización con el alcance acordado para tu operadora.', image: 'ops', alt: 'Equipo de una operadora revisando resultados de operación', preview: ['Reportes de operación', 'Rendimiento por ruta', 'Ventas · Ocupación · Costos'], links: [['premium-reportes', 'Explorar reportes'], ['premium-conectada', 'Ver el flujo completo'], ['premium-suscripcion', 'Consultar suscripción']] },
+  ],
+};
+
+function closingScene() {
+  return `<section class="cinema-open closing" id="asociar" aria-labelledby="close-title">
+    ${photo('coast', 'Furgoneta en una carretera ecuatoriana hacia el horizonte')}
+    <div class="cinema-shade"></div>
+    <div class="closing-copy wrap">
+      ${sectionTitle('Sé parte de la red', 'Conecta tu empresa.<br>Conecta Ecuador.', 'id="close-title"')}
+      <p>Cuéntanos qué rutas ofrece tu operadora. Nuestro equipo te acompaña al publicar tus primeros viajes y explorar las herramientas de gestión.</p>
+      <div class="close-actions">
+        <a class="solid" data-purpose="association" href="#incorporacion">Asociar mi empresa ${arrow}</a>
+        <a class="ink-link" data-purpose="demo" href="#incorporacion">Solicitar una demostración ${arrow}</a>
+        <a class="ink-link" data-purpose="advisor" href="#incorporacion">Contactar con un asesor ${arrow}</a>
+      </div>
+      <div class="close-actions">${actLink('planes', 'Comparar planes')}${actLink('simulador', 'Simular ventas')}<a class="ink-link" data-whatsapp hidden>WhatsApp ${arrow}</a></div>
     </div>
-    ${modes.map(([title, name, alt, description, status], i) => `<article class="mode-item mode-${i}">
-      ${photo(name, alt)}
-      <div class="mode-shade"></div>
-      <div class="mode-copy wrap"><div><h3>${title}</h3><p>${description}</p>${status ? `<span class="demo-label">${status}</span>` : ''}</div></div>
-    </article>`).join('')}
   </section>`;
 }
 
-function passenger() {
-  return `<section class="passenger scene paper" id="pasajero" aria-labelledby="pasajero-title">
-    <div class="passenger-head wrap">
-      <div>${sectionTitle('Del primer clic a la llegada', 'Viajar nunca fue tan sencillo.', 'id="pasajero-title"')}</div>
-      <p>Una pasajera necesita viajar. Acompáñala para ver qué hace en RutasEC y qué sucede en cada momento entre su reserva, tu equipo y su llegada.</p>
-    </div>
-    <div class="trip-visual wrap">
-      <div class="trip-display" aria-label="Escenas del viaje">
-        ${Object.entries(photoDescriptions).map(([name, description], i) => photo(name, description, { className: `trip-photo${i === 0 ? ' is-active' : ''}` })).join('')}
-        <div class="trip-screen phone" id="trip-screen"><img src="./media/app-search.webp" alt="Buscador de viajes de RutasEC" loading="lazy"></div>
-        <div class="trip-caption"><span class="trip-count">01 / 09</span><p>La experiencia de la pasajera</p></div>
-      </div>
-      <div class="trip-steps" aria-label="Pasos del viaje">
-        ${trip.map(([title, description, , ,], i) => `<article class="trip-step${i === 0 ? ' is-active' : ''}">
-          <h3><button type="button" data-trip="${i}" aria-pressed="${i === 0}"><span class="step-num">${String(i + 1).padStart(2, '0')}</span>${title}${arrow}</button></h3>
-          <div class="trip-step-body"><p>${description}</p></div>
-        </article>`).join('')}
-      </div>
-    </div>
-  </section>`;
-}
-
-function standardScene() {
-  return `<section class="standard scene" id="standard" aria-labelledby="standard-title">
-    <div class="standard-layout wrap">
-      <div class="standard-copy">
-        ${sectionTitle('RutasEC Standard', 'El control de<br>tu operación.', 'id="standard-title"')}
-        <p>Standard es la modalidad para vender tus viajes en RutasEC y administrar las reservas que recibes. El acceso es sin mensualidad y el modelo comercial se asocia a las reservas generadas por la plataforma.</p>
-        <span class="demo-label">Capturas de la PWA de demostración</span>
-      </div>
-      <div class="standard-panels">
-        ${standard.map(([title, description, screen]) => `<article class="standard-panel">
-          <div><h3>${title}</h3><p>${description}</p></div>
-          ${capture(screen, `Panel de operadora · ${title}`, 'phone')}
-        </article>`).join('')}
-      </div>
-    </div>
-  </section>`;
-}
-
-function premiumScene() {
-  return `<section class="premium scene" id="premium" aria-labelledby="premium-title">
-    <div class="premium-entry">
-      ${photo('ops', 'Equipo de despacho en un centro de operaciones')}
-      <div class="premium-shade"></div>
-      <div class="premium-intro wrap">
-        ${sectionTitle('RutasEC Premium', 'Tu marca.<br>Toda tu operación.', 'id="premium-title"')}
-        <p>Tu operadora tiene su propia mini app dentro de RutasEC. Tus pasajeros la abren desde un enlace, reconocen tu marca y compran tus boletos. Tus salidas también aparecen en el buscador general de RutasEC.</p>
-        <p>Tu equipo trabaja en el panel privado de la misma operadora. Desde ahí organiza personal y flota, asigna conductores y vehículos a las salidas y controla reservas, cobros, facturas y gastos.</p>
-        <a class="ink-link" href="#premium-demo">Explorar RutasEC Premium ${chevron}</a>
-      </div>
-    </div>
-    ${renderPremiumDemo()}
-  </section>`;
+function dialog(id, title, content) {
+  return `<dialog class="story-dialog" id="${id}" aria-label="${title}">
+    <header class="dialog-top"><span>${title}</span><button type="button" data-close-dialog>Cerrar <span aria-hidden="true">×</span></button></header>
+    ${content}
+  </dialog>`;
 }
 
 function tracking() {
-  return `<section class="tracking scene" id="seguimiento" aria-labelledby="track-title">
-    <div class="tracking-intro">
-      ${photo('minibus', 'Furgoneta viajando por una carretera ecuatoriana')}
-      <div class="tracking-shade"></div>
-      <div class="tracking-copy wrap">
-        ${sectionTitle('Durante el recorrido', 'Viajes conectados.', 'id="track-title"')}
-        <p>Desde el boleto y la validación de la reserva hasta la llegada, pasajero, conductor y operadora comparten información del mismo viaje.</p>
-        <p>El pasajero puede enviar un enlace a su familia. La operadora puede consultar el estado de sus unidades desde el centro de operaciones.</p>
-      </div>
-    </div>
-    <div class="tracking-demo wrap" id="tracking-demo">
+  return `    <div class="tracking-demo wrap">
       <div class="tracking-bar"><h3>Seguimiento de un viaje</h3><span class="demo-label">Demostración · Posición simulada</span></div>
       <div id="tracking-map" class="map-surface" aria-label="Mapa de seguimiento de un viaje de demostración"></div>
       <div class="tracking-ui">
@@ -181,13 +171,11 @@ function tracking() {
         <div class="tracking-controls"><button class="solid" type="button" id="track-play">Iniciar recorrido</button><button type="button" id="track-reset">Reiniciar</button><button type="button" id="track-share">Compartir enlace ${arrow}</button></div>
         <p id="track-notice" role="status"></p>
       </div>
-    </div>
-  </section>`;
+    </div>`;
 }
-
 function simulator() {
   const controls = [['price','Precio promedio por asiento',0,100,0.01,15,'USD'],['seats','Asientos comercializados al día',0,500,1,24,'asientos'],['days','Días de operación al mes',0,31,1,26,'días']];
-  return `<section class="simulator scene" id="simulador" aria-labelledby="sim-title">
+  return `<section class="simulator scene" aria-labelledby="sim-title">
     <div class="sim-layout wrap">
       <div class="sim-copy">
         ${sectionTitle('Simulador de ventas', 'Descubre el potencial<br>de tus rutas.', 'id="sim-title"')}
@@ -211,7 +199,7 @@ function simulator() {
 }
 
 function plans() {
-  return `<section class="plans scene paper" id="planes" aria-labelledby="plans-title">
+  return `<section class="plans scene paper" aria-labelledby="plans-title">
     <div class="wrap plans-layout">
       <div>${sectionTitle('RutasEC Standard y Premium', 'Crece con nosotros.', 'id="plans-title"')}</div>
       <p>Con Standard puedes incorporar tus viajes a la red y gestionar las reservas que recibes. Premium suma una mini app pública personalizable y un panel privado donde tu equipo gestiona empleados, vehículos, salidas, reservas, cobros y facturación.</p>
@@ -225,18 +213,9 @@ function plans() {
   </section>`;
 }
 
-function close() {
-  return `<section class="close scene" id="asociar" aria-labelledby="close-title">
-    <div class="close-frame">
-      ${photo('coast', 'Furgoneta en una carretera ecuatoriana hacia el horizonte')}
-      <div class="close-shade"></div>
-      <div class="close-copy wrap">
-        ${sectionTitle('Sé parte de la red', 'Conecta tu empresa.<br>Conecta tus pasajeros.<br><em>Conecta Ecuador.</em>', 'id="close-title"')}
-        <p>Cuéntanos qué rutas y servicios ofrece tu operadora. El equipo de RutasEC te acompaña en la incorporación, la configuración de tus primeros viajes y el uso de las herramientas disponibles para tu operación.</p>
-        <div class="close-actions"><a class="solid" data-purpose="association" href="#incorporacion">Asociar mi empresa ${arrow}</a><a class="ink-link" data-purpose="demo" href="#incorporacion">Solicitar una demostración ${arrow}</a><a class="ink-link" data-purpose="advisor" href="#incorporacion">Contactar con un asesor ${arrow}</a><a class="ink-link" data-whatsapp hidden>WhatsApp ${arrow}</a></div>
-      </div>
-    </div>
-    <div class="form-section paper" id="incorporacion">
+
+function application() {
+  return `    <div class="form-section paper">
       <div class="wrap form-layout">
         <div>${sectionTitle('Incorporación de operadoras', 'Hablemos de tus rutas.')}
           <p>Completa los datos de tu empresa y de la persona de contacto. RutasEC usará esta información para responder a tu solicitud.</p>
@@ -259,14 +238,18 @@ function close() {
           <div class="submit-line"><button type="submit" class="solid">Enviar solicitud ${arrow}</button><p id="application-status" role="status" aria-live="polite"></p></div>
         </form>
       </div>
-    </div>
-  </section>`;
+    </div>`;
 }
 
 function footer() {
-  return `<footer class="footer"><div class="wrap"><a class="wordmark" href="#ecuador"><img src="./media/logo.svg" alt="" width="34" height="34"><span>Rutas<b>EC</b></span></a><span>Conecta Ecuador</span><a href="./creditos.html">Créditos de imágenes y mapa</a><a href="#ecuador">Volver al inicio ↑</a></div></footer>`;
+  return `<footer class="footer"><div class="wrap"><a href="#ecuador" aria-label="RutasEC · Inicio">${logo}</a><a href="./creditos.html">Créditos de imágenes y mapa</a><a href="#ecuador">Volver al inicio ↑</a></div></footer>`;
 }
 
 export function render() {
-  return `${navigation()}<main>${hero()}${network()}${company()}${travelModes()}${passenger()}${standardScene()}${premiumScene()}${tracking()}${simulator()}${plans()}${close()}</main>${footer()}`;
+  return `${navigation()}<main>${openScene()}${network()}${story(travel)}${story(passenger)}${story(operators)}${story(enterprise)}${closingScene()}</main>${footer()}
+    ${renderPremiumDemo()}
+    ${dialog('tracking-demo', 'Seguimiento del viaje', tracking())}
+    ${dialog('simulador', 'Simulador comercial', simulator())}
+    ${dialog('planes', 'Planes RutasEC', plans())}
+    ${dialog('incorporacion', 'Asocia tu empresa', application())}`;
 }

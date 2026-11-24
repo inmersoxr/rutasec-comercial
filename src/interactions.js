@@ -1,5 +1,5 @@
 import gsap from 'gsap';
-import { contacts, trip } from './content.js';
+import { contacts } from './content.js';
 
 const q = selector => document.querySelector(selector);
 const all = selector => [...document.querySelectorAll(selector)];
@@ -32,53 +32,84 @@ export function configureNavigation() {
   });
 }
 
-export function configurePassenger() {
-  const steps = all('.trip-step');
-  const buttons = all('[data-trip]');
-  const screen = q('#trip-screen');
-  const display = q('.trip-display');
-  let active = -1;
-  let manual = false;
-  let referenceY = 0;
-  function activate(index, clicked = false) {
-    if (clicked) {
-      manual = true;
-      referenceY = scrollY;
+export function configureDialogs() {
+  const aliases = { empresa: 'standard', seguimiento: 'tracking-demo' };
+  let current = null;
+  let returnHash = '';
+  let returnFocus;
+
+  const targetFor = hash => {
+    const id = hash.slice(1);
+    return document.getElementById(aliases[id] || id);
+  };
+
+  function show(target, trigger) {
+    if (current === target) return;
+    if (!current) {
+      returnFocus = trigger;
+      if (!trigger && target.id.startsWith('premium-')) returnHash = '#premium';
+      if (!trigger && target.id === 'tracking-demo') returnHash = '#pasajero';
     }
-    if (index === active) return;
-    active = index;
-    const [title, , picture, capture] = trip[index];
-    steps.forEach((step, i) => step.classList.toggle('is-active', i === index));
-    buttons.forEach((button, i) => button.setAttribute('aria-pressed', String(i === index)));
-    all('.trip-photo').forEach(photo => photo.classList.toggle('is-active', photo.dataset.photo === picture));
-    q('.trip-count').textContent = `${String(index + 1).padStart(2, '0')} / ${String(steps.length).padStart(2, '0')}`;
-    q('.trip-caption p').textContent = title;
-    screen.hidden = !capture;
-    if (capture) {
-      const img = screen.querySelector('img');
-      img.src = `./media/app-${capture}.webp`;
-      img.alt = `RutasEC · ${title}`;
-      if (!reduced()) gsap.fromTo(screen, { y: 12, opacity: .18 }, { y: 0, opacity: 1, duration: .32, overwrite: true });
-    }
+    const previous = current;
+    current = target;
+    previous?.close();
+    target.scrollTop = 0;
+    target.showModal();
+    requestAnimationFrame(() => target.dispatchEvent(new Event('story:dialog-open')));
   }
-  buttons.forEach((button, index) => button.addEventListener('click', () => activate(index, true)));
-  let queued = false;
-  function onScroll() {
-    if (queued) return;
-    queued = true;
-    requestAnimationFrame(() => {
-      queued = false;
-      if (manual && Math.abs(scrollY - referenceY) < 65) return;
-      manual = false;
-      const bounds = display.getBoundingClientRect();
-      if (bounds.top >= innerHeight || bounds.bottom <= 0) return;
-      const center = innerWidth <= 720 ? Math.min(innerHeight - 35, bounds.bottom + 130) : innerHeight * .58;
-      const current = steps.findLastIndex(step => step.getBoundingClientRect().top <= center);
-      activate(Math.max(0, current));
+
+  function sync(initial = false) {
+    const target = targetFor(location.hash);
+    if (target instanceof HTMLDialogElement) {
+      if (initial) {
+        returnHash = target.id.startsWith('premium-') ? '#premium' : target.id === 'tracking-demo' ? '#pasajero' : '#asociar';
+        targetFor(returnHash)?.scrollIntoView();
+      }
+      show(target);
+      return;
+    }
+    returnHash = location.hash;
+    const previous = current;
+    current = null;
+    previous?.close();
+    if (initial) target?.scrollIntoView();
+  }
+
+  document.addEventListener('click', event => {
+    if (event.defaultPrevented || event.button || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    const control = event.target.closest('[data-close-dialog]');
+    if (control) {
+      control.closest('dialog')?.close();
+      return;
+    }
+    const link = event.target.closest('a[href^="#"]');
+    if (!link) return;
+    const target = targetFor(link.hash);
+    if (!(target instanceof HTMLDialogElement)) {
+      if (current) {
+        const previous = current;
+        current = null;
+        previous.close();
+      }
+      return;
+    }
+    event.preventDefault();
+    if (!current) returnHash = location.hash;
+    history.pushState(null, '', link.hash);
+    show(target, link);
+  });
+
+  for (const dialog of all('.story-dialog')) {
+    dialog.addEventListener('close', () => {
+      if (current !== dialog) return;
+      current = null;
+      if (targetFor(location.hash) === dialog) history.replaceState(null, '', returnHash || location.pathname + location.search);
+      if (returnFocus?.isConnected) returnFocus.focus({ preventScroll: true });
+      returnFocus = undefined;
     });
   }
-  window.addEventListener('scroll', onScroll, { passive: true });
-  activate(0);
+  window.addEventListener('hashchange', () => sync());
+  if (location.hash) requestAnimationFrame(() => sync(true));
 }
 
 export function configureSimulator() {

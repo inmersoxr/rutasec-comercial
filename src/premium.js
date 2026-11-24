@@ -38,7 +38,9 @@ const timeline = [
 
 function section(index, caption, description, content, classes = '') {
   const [id, title] = chapters[index];
-  return `<section id="${id}" class="premium-module ${classes}" aria-labelledby="${id}-title">
+  return `<dialog id="${id}" class="story-dialog" aria-labelledby="${id}-title">
+    <header class="dialog-top"><span>RutasEC Premium</span><button type="button" data-close-dialog>Cerrar <span aria-hidden="true">×</span></button></header>
+    <section class="premium-module ${classes}">
     <div class="premium-module-inner wrap">
       <header class="premium-module-copy">
         <p class="eyebrow">${caption}</p>
@@ -47,7 +49,8 @@ function section(index, caption, description, content, classes = '') {
       </header>
       <div class="premium-module-content">${content}</div>
     </div>
-  </section>`;
+    </section>
+  </dialog>`;
 }
 
 function profileCard(brand, context) {
@@ -72,7 +75,7 @@ export function renderPremiumDemo() {
         <div id="fleet-map" class="map-surface" aria-label="Seguimiento simulado de seis vehículos en tres rutas de Ecuador"></div>
         <div class="fleet-dock"><div class="fleet-select" role="group" aria-label="Seleccionar vehículo">${fleet.map(({ id }, i) => `<button type="button" data-unit="${i}" aria-pressed="${i === 0}">${id}</button>`).join('')}</div>
         <div class="premium-inline map-options"><button type="button" class="ink-link" id="fleet-fit">Ver toda la flota</button><button type="button" class="ink-link" id="fleet-motion">Pausar simulación</button></div>
-        <p id="fleet-status" role="status"></p><div id="fleet-detail"></div>
+        <p id="fleet-status" role="status"></p><details class="fleet-details"><summary>Datos de la unidad</summary><div id="fleet-detail"></div></details>
         <div class="premium-inline"><a id="fleet-open-vehicle" class="ink-link" href="#premium-flota">Abrir ficha del vehículo</a><a id="fleet-open-driver" class="ink-link" href="#premium-personal">Abrir perfil del conductor</a></div></div>
       </div>`, 'premium-operations')}
     ${section(2, 'Flota y mantenimiento · Demostración', 'Reúne por vehículo los permisos, seguros, viajes, combustible y mantenimiento. Usa el GPS para estimar el recorrido y el odómetro para confirmar el kilometraje. Programa las revisiones en función del intervalo de cada unidad.',

@@ -90,6 +90,7 @@ function setupFleet(shapes, boundary) {
     map.fitBounds(bounds, { paddingTopLeft: [26, 25], paddingBottomRight: [26 + overlay, 36], animate: false });
   }
   selector('#fleet-fit').addEventListener('click', fit);
+  map.getContainer().closest('dialog')?.addEventListener('story:dialog-open', fit);
   fit();
   markers[0].getElement()?.classList.add('is-selected');
 
@@ -132,6 +133,16 @@ function setupTracking(route, at, boundary) {
   const map = createMap('tracking-map', boundary);
   const line = drawRoute(map, route.coordinates);
   map.fitBounds(line.getBounds(), { padding: [25, 25], animate: false });
+  let fitted = false;
+  function fit() {
+    map.invalidateSize({ pan: false });
+    if (!fitted && map.getContainer().clientWidth) {
+      map.fitBounds(line.getBounds(), { padding: [25, 25], animate: false });
+      fitted = true;
+    }
+  }
+  map.getContainer().closest('dialog')?.addEventListener('story:dialog-open', fit);
+  fit();
   for (const [index, terminal] of [[0, route.origin], [1, route.destination]]) {
     L.circleMarker(at(index), { radius: 7, color: '#29382c', weight: 2, fillColor: '#fff7d6', fillOpacity: 1 })
       .addTo(map).bindTooltip(terminal.name);
