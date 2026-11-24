@@ -29,7 +29,7 @@ function navigation() {
   const links = navLinks.slice(1, -1);
   return `<a class="skip" href="#ecuador">Saltar al contenido</a>
   <header class="topbar">
-    <a class="wordmark" href="#ecuador" aria-label="RutasEC · Inicio">${logo}</a>
+    <span class="wordmark">${logo}</span>
     <nav class="primary-nav" aria-label="Recorrido">${links.map(([id, label]) => `<a href="#${id}">${label}</a>`).join('')}</nav>
     <div class="top-actions"><a href="#incorporacion" class="top-cta">Asociar mi empresa ${arrow}</a>
       <button type="button" class="index-toggle" aria-controls="chapter-menu" aria-expanded="false" aria-label="Abrir menú"><span></span><span></span></button>
