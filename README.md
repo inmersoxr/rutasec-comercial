@@ -1,6 +1,6 @@
 # RutasEC — Conecta Ecuador
 
-Presentación comercial independiente de la PWA. La landing se monta en siete escenas. En modalidades, pasajeros, Standard y Premium el scroll controla los beats de una composición fija. Los módulos detallados de Premium, el seguimiento, la comparativa, el simulador y el formulario se abren dentro del recorrido y tienen enlaces directos.
+Presentación comercial independiente de la PWA. La landing encaja en siete escenas a pantalla completa. Cada gesto cambia un beat sin desplazar el encuadre. Al terminar los beats, el siguiente gesto encaja la escena contigua. Los módulos detallados de Premium, el seguimiento, la comparativa, el simulador y el formulario se abren dentro del recorrido y tienen enlaces directos.
 
 ## Desarrollo
 

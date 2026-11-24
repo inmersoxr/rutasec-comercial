@@ -88,8 +88,8 @@ function renderBeat(beat, index) {
   </article>`;
 }
 
-function story({ id, label, title, beats, runway }) {
-  return `<section class="cinema" id="${id}" style="--runway:${runway}svh" aria-labelledby="${id}-title">
+function story({ id, label, title, beats }) {
+  return `<section class="cinema" id="${id}" aria-labelledby="${id}-title">
     <div class="cinema-stage">
       <div class="cinema-title wrap">${sectionTitle(label, title, `id="${id}-title"`)}</div>
       ${beats.map(renderBeat).join('')}
@@ -101,14 +101,14 @@ function story({ id, label, title, beats, runway }) {
 }
 
 const travel = {
-  id: 'modalidades', label: 'La experiencia del viaje', title: 'Diferentes formas de viajar.', runway: 62,
+  id: 'modalidades', label: 'La experiencia del viaje', title: 'Diferentes formas de viajar.',
   beats: modes.map(([title, image, alt, copy, badge], i) => ({
     title, image, alt, copy, badge, label: ['Compartido', 'Privado', 'Personalizado'][i],
   })),
 };
 
 const passenger = {
-  id: 'pasajero', label: 'Del primer clic a la llegada', title: 'Así viaja un pasajero.', runway: 79,
+  id: 'pasajero', label: 'Del primer clic a la llegada', title: 'Así viaja un pasajero.',
   beats: [
     { label: 'Busca', title: 'Encuentra su viaje', copy: 'Elige origen, destino y fecha. Compara horarios, tarifas, vehículos y cupos de distintas operadoras antes de decidir.', image: 'booking', alt: 'Pasajera consultando un viaje en el teléfono', screen: 'results' },
     { label: 'Reserva', title: 'Recibe su boleto', copy: 'Selecciona los asientos, confirma el pago de demostración y recibe un boleto digital con los datos de su salida.', image: 'welcome', alt: 'Pasajera junto a una furgoneta en el punto de embarque', screen: 'ticket' },
@@ -118,7 +118,7 @@ const passenger = {
 };
 
 const operators = {
-  id: 'standard', label: 'RutasEC Standard', title: 'Tus viajes, en el marketplace.', runway: 60,
+  id: 'standard', label: 'RutasEC Standard', title: 'Tus viajes, en el marketplace.',
   beats: standard.map(([title, copy, screen], i) => ({
     title, copy: i === 0 ? `${copy} Standard permite publicar y recibir reservas sin mensualidad.` : copy,
     label: ['Publicar', 'Reservas', 'Embarque'][i], screen,
@@ -128,7 +128,7 @@ const operators = {
 };
 
 const enterprise = {
-  id: 'premium', label: 'RutasEC Premium', title: 'Tu marca. Toda tu operación.', runway: 112,
+  id: 'premium', label: 'RutasEC Premium', title: 'Tu marca. Toda tu operación.',
   beats: [
     { label: 'Tu mini app', title: 'Un espacio con tu marca', copy: 'Personaliza tu perfil, logotipo, colores y servicios. Comparte tu enlace para vender en tu propia mini app y mantén tus salidas visibles en el buscador de RutasEC.', image: 'premium-ventas', alt: 'Pasajera haciendo una reserva desde el teléfono', preview: ['Vista de una operadora', 'Andes Movilidad', 'Rutas · Horarios · Reservar'], links: [['premium-marca', 'Probar personalización'], ['premium-demo', 'Ver ejemplos de marca']] },
     { label: 'Operaciones', title: 'Cada salida, coordinada', copy: 'Asigna a una persona y a un vehículo desde despacho. Durante el viaje, el equipo consulta en qué ruta va la unidad, quién conduce y a qué hora llegará.', image: 'premium-despacho', alt: 'Responsable de despacho supervisando una flota de transporte ecuatoriana', preview: ['Centro de operaciones', 'Cuenca → Guayaquil', 'Vehículo y conductor asignados'], links: [['premium-operaciones', 'Abrir mapa de flota']] },
@@ -152,6 +152,7 @@ function closingScene() {
       </div>
       <div class="close-actions">${actLink('planes', 'Comparar planes')}${actLink('simulador', 'Simular ventas')}<a class="ink-link" data-whatsapp hidden>WhatsApp ${arrow}</a></div>
     </div>
+    ${footer()}
   </section>`;
 }
 
@@ -246,7 +247,7 @@ function footer() {
 }
 
 export function render() {
-  return `${navigation()}<main>${openScene()}${network()}${story(travel)}${story(passenger)}${story(operators)}${story(enterprise)}${closingScene()}</main>${footer()}
+  return `${navigation()}<main>${openScene()}${network()}${story(travel)}${story(passenger)}${story(operators)}${story(enterprise)}${closingScene()}</main>
     ${renderPremiumDemo()}
     ${dialog('tracking-demo', 'Seguimiento del viaje', tracking())}
     ${dialog('simulador', 'Simulador comercial', simulator())}

@@ -1,43 +1,15 @@
 import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
 
 const wheelIdle = 180;
 const scrollTolerance = 2;
 
-function configureBeatGestures(scenes) {
-  function getStep(distance) {
-    const position = window.scrollY;
-    const direction = Math.sign(distance);
-    const projected = position + distance;
-    // When a gesture crosses into a scene, stop at its entrance beat.
-    const ordered = direction > 0 ? scenes : [...scenes].reverse();
-    for (const { trigger, last } of ordered) {
-      const { start, end } = trigger;
-      const increment = (end - start) / last;
-      if (position >= start - scrollTolerance && position <= end + scrollTolerance) {
-        const current = Math.max(0, Math.min(last, Math.round((position - start) / increment)));
-        const next = current + direction;
-        if (next >= 0 && next <= last) return start + next * increment;
-      } else if (direction > 0 && position < start && projected >= start) {
-        return start;
-      } else if (direction < 0 && position > end && projected <= end) {
-        return end;
-      }
-    }
-  }
-
-  function moveTo(top) {
-    window.scrollTo({ top, behavior: 'instant' });
-    ScrollTrigger.update();
-  }
-
+function configureStoryGestures(step) {
   const dialogOpen = () => document.querySelector('dialog[open]');
   let wheelTime = -Infinity;
   let wheelHandled = false;
   window.addEventListener('wheel', event => {
     if (event.defaultPrevented || event.ctrlKey || dialogOpen()) return;
+    if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
     if (event.timeStamp - wheelTime >= wheelIdle) wheelHandled = false;
     wheelTime = event.timeStamp;
 
@@ -46,18 +18,15 @@ function configureBeatGestures(scenes) {
       event.preventDefault();
       return;
     }
-    if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
-    const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? window.innerHeight : 1;
-    const target = getStep(event.deltaY * unit);
-    if (target === undefined || !event.cancelable) return;
+    if (!event.cancelable) return;
     event.preventDefault();
     wheelHandled = true;
-    moveTo(target);
+    step(Math.sign(event.deltaY));
   }, { passive: false });
 
   let swipe;
   window.addEventListener('touchstart', event => {
-    if (event.touches.length !== 1 || dialogOpen() || !event.target.closest('.cinema-stage')) {
+    if (event.touches.length !== 1 || dialogOpen() || !event.target.closest('main, .topbar')) {
       swipe = undefined;
       return;
     }
@@ -70,9 +39,8 @@ function configureBeatGestures(scenes) {
     const { clientX, clientY } = event.touches[0];
     const distance = swipe.y - clientY;
     if (swipe.handled || Math.abs(distance) < 28 || Math.abs(distance) <= Math.abs(clientX - swipe.x)) return;
-    const travel = Math.sign(distance) * window.innerHeight * 0.65;
     swipe.handled = true;
-    moveTo(getStep(travel) ?? window.scrollY + travel);
+    step(Math.sign(distance));
   }, { passive: true });
 
   function clearSwipe() { swipe = undefined; }
@@ -84,20 +52,18 @@ function configureBeatGestures(scenes) {
     if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || dialogOpen()) return;
     if (event.target.closest('input, select, textarea, [contenteditable="true"]')) return;
     if (event.key === ' ' && event.target.closest('a, button')) return;
-    const distance = {
-      ArrowUp: -40, ArrowDown: 40, PageUp: -window.innerHeight,
-      PageDown: window.innerHeight, ' ': window.innerHeight * (event.shiftKey ? -1 : 1),
+    const direction = {
+      ArrowUp: -1, ArrowDown: 1, PageUp: -1,
+      PageDown: 1, ' ': event.shiftKey ? -1 : 1,
     }[event.key];
-    if (!distance) return;
+    if (!direction) return;
     if (event.repeat && keyHandled === event.key) {
       event.preventDefault();
       return;
     }
-    const target = getStep(distance);
-    if (target === undefined) return;
     event.preventDefault();
     keyHandled = event.key;
-    moveTo(target);
+    step(direction);
   });
   window.addEventListener('keyup', event => {
     if (keyHandled === event.key) keyHandled = undefined;
@@ -105,16 +71,17 @@ function configureBeatGestures(scenes) {
 }
 
 export function configureMotion() {
-  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-  const scenes = [];
-  for (const scene of document.querySelectorAll('.cinema')) {
-    const beats = [...scene.querySelectorAll('[data-beat]')];
-    const buttons = [...scene.querySelectorAll('[data-jump]')];
-    let active = 0;
+  const bar = document.querySelector('.scroll-meter');
+  let totalBeats = 0;
+  const scenes = [...document.querySelectorAll('main > section')].map(element => {
+    const beats = [...element.querySelectorAll('[data-beat]')];
+    const buttons = [...element.querySelectorAll('[data-jump]')];
+    const scene = { element, first: totalBeats, last: Math.max(0, beats.length - 1), active: 0 };
+    totalBeats += scene.last + 1;
 
-    function activate(index) {
-      if (index === active) return;
-      active = index;
+    scene.activate = index => {
+      if (index === scene.active) return;
+      scene.active = index;
       beats.forEach((beat, i) => {
         const visible = i === index;
         beat.classList.toggle('is-active', visible);
@@ -122,24 +89,63 @@ export function configureMotion() {
         beat.setAttribute('aria-hidden', String(!visible));
       });
       buttons.forEach((button, i) => button.setAttribute('aria-pressed', String(i === index)));
-    }
-
-    function applyProgress(self) {
-      activate(Math.round(self.progress * (beats.length - 1)));
-    }
-
-    const timeline = ScrollTrigger.create({
-      trigger: scene, start: 'top top', end: 'bottom bottom',
-      onUpdate: applyProgress, onRefresh: applyProgress,
-    });
-    scenes.push({ trigger: timeline, last: beats.length - 1 });
+    };
     buttons.forEach((button, index) => button.addEventListener('click', () => {
-      const offset = (timeline.end - timeline.start) * index / (beats.length - 1);
-      window.scrollTo({ top: timeline.start + offset, behavior: reducedMotion.matches ? 'instant' : 'smooth' });
+      scene.activate(index);
+      updateProgress();
     }));
+    return scene;
+  });
+
+  function currentScene() {
+    const offsets = scenes.map(({ element }) => element.getBoundingClientRect().top);
+    return offsets.reduce((current, offset, index) => (
+      Math.abs(offset) < Math.abs(offsets[current]) ? index : current
+    ), 0);
   }
 
-  configureBeatGestures(scenes);
+  function updateProgress() {
+    const scene = scenes[currentScene()];
+    bar.style.transform = `scaleX(${(scene.first + scene.active) / (totalBeats - 1)})`;
+  }
+
+  function step(direction) {
+    const index = currentScene();
+    const scene = scenes[index];
+    const offset = scene.element.getBoundingClientRect().top;
+
+    // Settle on a full frame first if native navigation landed between two scenes.
+    if (Math.abs(offset) > scrollTolerance) {
+      const target = Math.sign(offset) === direction ? scene : scenes[index + direction];
+      enter(target ?? scene, direction);
+      return;
+    }
+
+    const next = scene.active + direction;
+    if (next >= 0 && next <= scene.last) {
+      scene.activate(next);
+      updateProgress();
+      return;
+    }
+
+    const target = scenes[index + direction];
+    if (target) enter(target, direction);
+  }
+
+  function enter(scene, direction) {
+    scene.activate(direction > 0 ? 0 : scene.last);
+    scene.element.scrollIntoView({ block: 'start', behavior: 'instant' });
+    updateProgress();
+  }
+
+  configureStoryGestures(step);
+  window.addEventListener('scroll', updateProgress, { passive: true });
+  window.addEventListener('resize', updateProgress, { passive: true });
+  window.addEventListener('hashchange', () => {
+    const scene = scenes.find(({ element }) => `#${element.id}` === location.hash);
+    if (scene) enter(scene, 1);
+  });
+  updateProgress();
 
   const motion = gsap.matchMedia();
   motion.add('(prefers-reduced-motion: no-preference)', () => {
@@ -148,21 +154,8 @@ export function configureMotion() {
     });
   });
   motion.add('(prefers-reduced-motion: no-preference) and (min-width: 721px)', () => {
-    gsap.to('.hero .photo img', {
-      scale: 1.065, ease: 'none', scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true },
-    });
+    gsap.fromTo('.hero .photo img', { scale: 1.045 }, { scale: 1, duration: 1.6, ease: 'power2.out' });
   });
-
-  const bar = document.querySelector('.scroll-meter');
-  const updateProgress = () => {
-    const available = document.documentElement.scrollHeight - window.innerHeight;
-    const progress = available > 0 ? window.scrollY / available : 0;
-    bar.style.transform = `scaleX(${Math.max(0, Math.min(1, progress))})`;
-  };
-  window.addEventListener('scroll', updateProgress, { passive: true });
-  window.addEventListener('resize', updateProgress, { passive: true });
-  document.fonts.ready.then(() => ScrollTrigger.refresh());
-  updateProgress();
 }
 
 export function configureDestinations() {
@@ -172,7 +165,6 @@ export function configureDestinations() {
   const toggle = stage.querySelector('.network-pause');
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   let active = 0;
-  let scrollStep = 0;
   let visible = false;
   let paused = false;
   let timer;
@@ -194,20 +186,8 @@ export function configureDestinations() {
     }, 4800);
   }
 
-  function followScroll() {
-    if (!visible) return;
-    const travel = Math.max(1, section.offsetHeight - stage.offsetHeight);
-    const progress = Math.max(0, Math.min(1, -section.getBoundingClientRect().top / travel));
-    const step = Math.min(slides.length - 1, Math.floor(progress * slides.length));
-    if (step === scrollStep) return;
-    show(step);
-    scrollStep = step;
-    schedule();
-  }
-
   new IntersectionObserver(([entry]) => {
     visible = entry.intersectionRatio >= .6;
-    followScroll();
     schedule();
   }, { threshold: [.6] }).observe(stage);
   toggle.addEventListener('click', () => {
@@ -215,8 +195,6 @@ export function configureDestinations() {
     toggle.textContent = paused ? 'Reanudar fotos' : 'Pausar fotos';
     schedule();
   });
-  window.addEventListener('scroll', followScroll, { passive: true });
-  window.addEventListener('resize', followScroll, { passive: true });
   document.addEventListener('visibilitychange', schedule);
   reducedMotion.addEventListener('change', schedule);
 }

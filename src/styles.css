@@ -12,7 +12,9 @@
   --nav-height: 76px;
 }
 *, *::before, *::after { box-sizing: border-box; }
-html { color-scheme: dark; background: var(--ink); }
+html { color-scheme: dark; background: var(--ink); scroll-snap-type: y mandatory; }
+main, .topbar { touch-action: pan-x pinch-zoom; }
+main > section { min-height: 100dvh; scroll-snap-align: start; scroll-snap-stop: always; }
 body { margin: 0; color: var(--cream); font-family: var(--body); font-size: 16px; line-height: 1.5; overflow-x: clip; }
 html:has(dialog[open]) { overflow: hidden; }
 button, input, select, textarea { font: inherit; }
@@ -69,8 +71,7 @@ h3 { font-size: clamp(26px, 4vw, 49px); font-weight: 720; line-height: 1.04; let
 .hero-copy > p:not(.eyebrow), .closing-copy > p:not(.eyebrow) { margin-top: 24px; font-size: clamp(16px, 1.5vw, 23px); max-width: 45ch; }
 .hero-copy .ink-link { margin-top: 18px; color: var(--acid); }
 
-.cinema { min-height: calc(100dvh + var(--runway)); }
-.cinema-stage { position: sticky; top: 0; touch-action: pan-x pinch-zoom; --deck: 62px; }
+.cinema-stage { --deck: 62px; }
 .cinema-title { position: absolute; z-index: 4; top: calc(var(--nav-height) + clamp(20px, 5dvh, 54px)); inset-inline: 0; pointer-events: none; }
 .cinema-title h2 { font-size: clamp(61px, 8.7vw, 132px); max-width: 16ch; text-wrap: balance; }
 .cinema-title .eyebrow { margin-bottom: 10px; }
@@ -99,9 +100,10 @@ h3 { font-size: clamp(26px, 4vw, 49px); font-weight: 720; line-height: 1.04; let
 .beat-control button[aria-pressed=true] { border-top: 2px solid var(--acid); color: var(--acid); }
 .beat-control button:hover { color: var(--acid); }
 
+.closing { grid-template-rows: 1fr auto; }
 .closing .cinema-shade { background: linear-gradient(90deg,#111b13e8,#131c15a0 42%,transparent 90%), linear-gradient(0deg,#0b110cf5,transparent 63%); }
 .close-actions { display: flex; gap: 7px 18px; flex-wrap: wrap; margin-top: 13px; }
-.footer { background: #121813; padding-block: 22px; font-size: 13px; }
+.footer { position: relative; background: #121813; padding-block: 22px; font-size: 13px; }
 .footer .wrap { display: flex; align-items: center; justify-content: space-between; gap: 13px; flex-wrap: wrap; }
 .footer .brand-logo { width: 52px; }
 
@@ -124,8 +126,8 @@ h3 { font-size: clamp(26px, 4vw, 49px); font-weight: 720; line-height: 1.04; let
 .fleet-details { border-top: 1px solid #647264; margin-block: 10px; }
 .fleet-details summary { cursor: pointer; padding-block: 10px; font-weight: 670; }
 .hero-bottom a span { color: var(--acid); font-size: 16px; margin-left: 6px; }
-.network { min-height: 238dvh; background: #232f24; color: var(--cream); }
-.network-frame { position: sticky; top: 0; isolation: isolate; min-height: 100dvh; display: grid; align-items: end; overflow: hidden; }
+.network { background: #232f24; color: var(--cream); }
+.network-frame { position: relative; isolation: isolate; min-height: 100dvh; display: grid; align-items: end; overflow: hidden; }
 .destination { position: absolute; z-index: -2; inset: 0; opacity: 0; visibility: hidden; transition: opacity .72s ease, visibility .72s; margin: 0; }
 .destination.is-active { opacity: 1; visibility: visible; }
 .destination figcaption { position: absolute; inset: calc(var(--nav-height) + 24px) 0 auto; display: grid; gap: 4px; }
@@ -305,11 +307,45 @@ h3 { font-size: clamp(26px, 4vw, 49px); font-weight: 720; line-height: 1.04; let
   .network-copy h2 { font-size: clamp(52px, 14vw, 80px); }
   .network-copy p:not(.eyebrow) { margin-top: 9px; font-size: 14px; }
 }
+@media (max-height: 780px) {
+  .hero-copy, .closing-copy { padding-block: calc(var(--nav-height) + 12px) clamp(18px, 4dvh, 42px); }
+  .hero h1 { font-size: clamp(62px, min(19vw, 25dvh), 185px); }
+  .closing-copy h2 { font-size: clamp(42px, min(9.4vw, 17dvh), 122px); }
+  .hero-copy > p:not(.eyebrow), .closing-copy > p:not(.eyebrow) {
+    margin-top: 10px; font-size: clamp(14px, 1.4vw, 18px); line-height: 1.35;
+  }
+  .closing .close-actions { gap: 3px 14px; margin-top: 6px; }
+  .footer { padding-block: 12px; }
+}
+@media (max-width: 480px) and (max-height: 780px), (max-height: 500px) {
+  .closing .close-actions a { min-height: 32px; padding-block: 3px; }
+  .footer .brand-logo { display: none; }
+  .footer .wrap > a:first-child { display: none; }
+}
+@media (max-width: 360px) and (max-height: 600px) {
+  .closing-copy h2 { font-size: 38px; }
+  .footer { padding-block: 8px; }
+}
 @media (max-height: 660px) {
   .cinema-title { top: calc(var(--nav-height) + 13px); }
-  .cinema-title h2 { font-size: clamp(41px, 8.2vw, 82px); }
+  .cinema-title h2 { font-size: clamp(38px, 8.2vw, 82px); }
   .beat-copy p { margin-top: 6px; }
   .scene-capture { max-height: 22dvh; }
+}
+@media (max-height: 500px) {
+  :root { --nav-height: 52px; }
+  .topbar .brand-logo { width: 50px; }
+  .hero-copy, .closing-copy { padding-block: calc(var(--nav-height) + 9px) 14px; }
+  .hero h1 { font-size: clamp(42px, 18dvh, 90px); }
+  .closing-copy h2 { font-size: clamp(35px, 12dvh, 60px); }
+  .cinema-title h2, .network-copy h2 { font-size: clamp(30px, 10dvh, 56px); }
+  .hero-copy .ink-link { margin-top: 8px; }
+  .cinema-stage { --deck: 46px; }
+  .beat-content { padding-block: 0 9px; }
+  .beat-copy h3 { font-size: clamp(21px, 5.5dvh, 32px); }
+  .beat-copy p { font-size: 14px; }
+  .beat-links a { min-height: 29px; }
+  .network-copy { padding-block: calc(var(--nav-height) + 12px) 18px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .beat, .beat .photo img, .beat-content, .destination { transition: none; }
